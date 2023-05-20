@@ -11,7 +11,7 @@ app.use(express.json());
 
 
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri =
     `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ys20m5d.mongodb.net/?retryWrites=true&w=majority`;
   
@@ -35,9 +35,25 @@ async function run() {
 
 
       app.get("/alltoys", async (req, res) => {
-          const toys = await toyCollection.find().toArray();
+          const toys = await toyCollection.find().limit(20).toArray();
           res.send(toys)
       });
+
+      app.get("/toydetails/:id", async (req, res) => {
+          const id = req.params.id;
+          const query = {_id: new ObjectId(id)}
+          const toy = await toyCollection.findOne(query);
+          res.send(toy)
+      })
+
+      app.get("/mytoys/:email", async (req, res) => {
+          const email = req.params.email;
+          const mytoys = await toyCollection
+            .find({ sellerEmail: email })
+            .toArray();
+          res.send(mytoys)
+      })
+      
 
       app.post("/addatoy", async (req, res) => {
           const toy = req.body;
@@ -46,6 +62,14 @@ async function run() {
           res.send(result)
 
       });
+
+
+      app.delete("/toys/:id", async (req, res) => {
+          const id = req.params.id;
+          const query = { _id: new ObjectId(id) };
+          const result = await toyCollection.deleteOne(query);
+          res.send(result)
+      })
 
 
 
